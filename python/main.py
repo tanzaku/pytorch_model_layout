@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+import torch
+import torch.nn.functional as F
+
+
+class Net(torch.nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.fc1 = torch.nn.Linear(32, 16)
+        self.fc2 = torch.nn.Linear(16, 1)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return x
+
+
+torch.manual_seed(1)
+
+# PoCなので教師データは一つ
+inputs = torch.randn(32)
+targets = torch.randn(1)
+
+net = Net()
+net.train()
+
+criterion = torch.nn.MSELoss()
+optimizer = torch.optim.SGD(net.parameters(), lr=0.01)
+
+N_EPOCHS = 100
+for i in range(N_EPOCHS):
+    outputs = net(inputs)
+    loss = criterion(outputs, targets)
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+outputs = net(inputs)
+# print('outputs', outputs, 'loss', loss.item())
+
+with open('data/weight_row=16_col=32.bin', mode='wb') as fileobj:
+    # x = net.fc1.weight.to('cpu').detach().numpy().copy()
+    x = net.fc1.weight.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+    x = net.fc1.bias.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+with open('data/weight_row=1_col=16.bin', mode='wb') as fileobj:
+    x = net.fc2.weight.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+    x = net.fc2.bias.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+with open('data/input.bin', mode='wb') as fileobj:
+    x = inputs.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+with open('data/target.bin', mode='wb') as fileobj:
+    x = targets.to('cpu').detach().numpy()
+    x.tofile(fileobj)
+
+with open('data/output.bin', mode='wb') as fileobj:
+    x = outputs.to('cpu').detach().numpy()
+    x.tofile(fileobj)

@@ -12,6 +12,8 @@ class Net(torch.nn.Module):
 
     def forward(self, x):
         x = self.linear1(x)
+        x = torch.clamp(x, 0, 5)
+        x = x * 10
         x = self.linear2(x)
         return x
 
